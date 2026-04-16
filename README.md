@@ -1,6 +1,6 @@
 # Insight Board
 
-Expo Router app for the Speer Health frontend assignment. Includes a four-stage insight pipeline board, detail/form workflow, analytics dashboard, and a setup screen for the live Supabase/Apollo integration.
+Includes a four-stage insight pipeline board, detail/form workflow, analytics dashboard, and a setup screen for the live Supabase/Apollo integration.
 
 ## Prerequisites
 
