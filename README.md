@@ -1,50 +1,144 @@
-# Welcome to your Expo app 👋
+# Insight Board
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Expo Router app for the Speer Health frontend assignment. Includes a four-stage insight pipeline board, detail/form workflow, analytics dashboard, and a setup screen for the live Supabase/Apollo integration.
 
-## Get started
+## Prerequisites
 
-1. Install dependencies
+- Node.js 18+
+- Expo CLI: `npm install -g expo-cli`
+- For iOS builds: Xcode 15+ and CocoaPods
+- For Android builds: Android Studio with an SDK configured
 
-   ```bash
-   npm install
-   ```
+## Env setup
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+Copy `.env.example` to `.env` and fill in your Supabase project values:
 
 ```bash
-npm run reset-project
+cp .env.example .env
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+```env
+EXPO_PUBLIC_SUPABASE_URL=https://<your-ref>.supabase.co
+EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<publishable-key>
+```
 
-## Learn more
+The derived GraphQL endpoint is `${EXPO_PUBLIC_SUPABASE_URL}/graphql/v1`, exposed from `lib/env.ts`.
 
-To learn more about developing your project with Expo, look at the following resources:
+### Demo account passwords
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+The Setup screen includes quick-sign-in buttons for the two seeded demo accounts. The email addresses are pre-set (`alice@test.com`, `bob@test.com`) but **passwords are not committed** — open `components/providers/backend-provider.tsx` and fill in the `password` field for each account:
 
-## Join the community
+```ts
+const demoAccounts: DemoAccount[] = [
+  {
+    label: "Alice demo",
+    email: "alice@test.com",
+    password: "<alice-password>",
+  },
+  { label: "Bob demo", email: "bob@test.com", password: "<bob-password>" },
+];
+```
 
-Join our community of developers creating universal apps.
+The analytics screen also expects the `public.get_insight_analytics(integer)` SQL function documented in `InsightBoard_Setup_Guide_full_fidelity.md`.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Running the app
+
+Install dependencies first:
+
+```bash
+npm install
+```
+
+| Command             | What it does                        |
+| ------------------- | ----------------------------------- |
+| `npm run start`     | Start the Metro bundler (Expo Go)   |
+| `npm run ios`       | Run on iOS simulator via Expo Go    |
+| `npm run android`   | Run on Android emulator via Expo Go |
+| `npm run web`       | Run in browser                      |
+| `npm run lint`      | ESLint                              |
+| `npm run typecheck` | TypeScript type check               |
+| `npm test`          | Jest unit tests                     |
+
+> **Note:** Expo Go supports most features but does not run custom native modules. See below for the development build required to test speech-to-text.
+
+## Development build — speech-to-text
+
+Speech recognition (`expo-speech-recognition`) is a custom native module that **cannot run inside Expo Go**. A native development build is required.
+
+### iOS
+
+```bash
+# 1. Generate native project files
+npx expo prebuild --clean
+
+# 2. Install CocoaPods
+cd ios && pod install && cd ..
+
+# 3. Build and run (simulator or connected device)
+npx expo run:ios
+```
+
+> **Real device recommended.** On-device speech recognition works fully; the iOS simulator has limited microphone support and may not produce transcripts. Connect a physical iPhone and select it as the run target in Xcode or via `--device`.
+
+Permissions are already declared in `app.json`:
+
+- `NSSpeechRecognitionUsageDescription`
+- `NSMicrophoneUsageDescription`
+
+### Android
+
+```bash
+# 1. Generate native project files (skip if already done)
+npx expo prebuild --clean
+
+# 2. Build and run on emulator or connected device
+npx expo run:android
+```
+
+The `android.permission.RECORD_AUDIO` permission is already declared in `app.json`. An emulator with a working microphone input works for basic testing; a real device gives better recognition accuracy.
+
+### Testing the hook in isolation
+
+```bash
+npm test -- hooks/use-speech-recognition
+```
+
+The test suite (`__tests__/hooks/use-speech-recognition.test.ts`) mocks the native module so it runs without a device.
+
+## Routes
+
+| Route                      | Description                                                                                          |
+| -------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `app/(tabs)/index.tsx`     | Insight Pipeline Board — list/overview modes, filters, activity feed, detail sheet, create/edit form |
+| `app/(tabs)/analytics.tsx` | KPI dashboard, funnel, trend, distribution, heatmap, leaderboard, PDF export                         |
+| `app/(tabs)/setup.tsx`     | Supabase/Apollo/env setup status and demo account sign-in                                            |
+
+## Key files
+
+| File                                              | Purpose                                                                          |
+| ------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `components/providers/insight-board-provider.tsx` | Shared board state — paged stage reads, stage counts, activity, Realtime signals |
+| `components/providers/backend-provider.tsx`       | Supabase auth session and demo account credentials                               |
+| `lib/insight-board-schema.ts`                     | Shared domain types and reference constants                                      |
+| `lib/services/apollo.ts`                          | Apollo client wired to the Supabase GraphQL endpoint                             |
+| `lib/services/insight-board-graphql.ts`           | GraphQL documents for board reads and mutations                                  |
+| `lib/services/insight-board-data.ts`              | Server-filtered stage paging, hydration, and count helpers                       |
+| `lib/services/insight-board-analytics.ts`         | Analytics summary RPC and export helpers                                         |
+| `lib/services/openfda.ts`                         | Cached OpenFDA label and adverse-event lookups                                   |
+| `lib/insight-utils.ts`                            | Filtering, stage transitions, and relative-time helpers                          |
+| `lib/services/report-export.ts`                   | HTML-to-PDF report export                                                        |
+| `constants/theme.ts`                              | Material 3 palette anchored to the Speer brand colors                            |
+| `hooks/use-speech-recognition.ts`                 | Speech recognition hook wrapping `expo-speech-recognition`                       |
+
+## Live integration status
+
+| Feature                                              | Status                                      |
+| ---------------------------------------------------- | ------------------------------------------- |
+| Stage-scoped insight loading with pagination         | ✅                                          |
+| Supabase GraphQL reads and mutations                 | ✅                                          |
+| Supabase Realtime subscriptions and presence signals | ✅                                          |
+| OpenFDA label and adverse-event lookups              | ✅                                          |
+| Analytics with PDF export                            | ✅                                          |
+| Native speech recognition                            | ✅ (requires development build — see above) |
+
+See `ARCHITECTURE.md` for the full frontend structure and data flow.
