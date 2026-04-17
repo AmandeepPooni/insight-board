@@ -1,10 +1,10 @@
 import type { Session, User as SupabaseAuthUser } from "@supabase/supabase-js";
 import {
-    PropsWithChildren,
-    createContext,
-    useContext,
-    useEffect,
-    useState,
+  PropsWithChildren,
+  createContext,
+  useContext,
+  useEffect,
+  useState,
 } from "react";
 
 import { hasSupabaseEnv } from "@/lib/env";
@@ -35,12 +35,12 @@ const demoAccounts: DemoAccount[] = [
   {
     label: "Alice demo",
     email: "alice@test.com",
-    password: "<alice-password>",
+    password: "",
   },
   {
     label: "Bob demo",
     email: "bob@test.com",
-    password: "<bob-password>",
+    password: "",
   },
 ];
 

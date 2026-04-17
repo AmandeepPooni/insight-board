@@ -9,55 +9,25 @@ Includes a four-stage insight pipeline board, detail/form workflow, analytics da
 - For iOS builds: Xcode 15+ and CocoaPods
 - For Android builds: Android Studio with an SDK configured
 
-## Env setup
-
-Copy `.env.example` to `.env` and fill in your Supabase project values:
-
-```bash
-cp .env.example .env
-```
-
-```env
-EXPO_PUBLIC_SUPABASE_URL=https://<your-ref>.supabase.co
-EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<publishable-key>
-```
-
-The derived GraphQL endpoint is `${EXPO_PUBLIC_SUPABASE_URL}/graphql/v1`, exposed from `lib/env.ts`.
-
-### Demo account passwords
-
-The Setup screen includes quick-sign-in buttons for the two seeded demo accounts. The email addresses are pre-set (`alice@test.com`, `bob@test.com`) but **passwords are not committed** — open `components/providers/backend-provider.tsx` and fill in the `password` field for each account:
-
-```ts
-const demoAccounts: DemoAccount[] = [
-  {
-    label: "Alice demo",
-    email: "alice@test.com",
-    password: "<alice-password>",
-  },
-  { label: "Bob demo", email: "bob@test.com", password: "<bob-password>" },
-];
-```
-
-The analytics screen also expects the `public.get_insight_analytics(integer)` SQL function documented in `InsightBoard_Setup_Guide_full_fidelity.md`.
-
 ## Running the app
-
-Install dependencies first:
 
 ```bash
 npm install
+npm run start
 ```
 
-| Command             | What it does                        |
-| ------------------- | ----------------------------------- |
-| `npm run start`     | Start the Metro bundler (Expo Go)   |
-| `npm run ios`       | Run on iOS simulator via Expo Go    |
-| `npm run android`   | Run on Android emulator via Expo Go |
-| `npm run web`       | Run in browser                      |
-| `npm run lint`      | ESLint                              |
-| `npm run typecheck` | TypeScript type check               |
-| `npm test`          | Jest unit tests                     |
+Press **`a`** for Android or **`i`** for iOS once the bundler is ready.
+
+**Login:** on the Setup screen, select an email and enter the password to sign in.
+
+| Command             | What it does                      |
+| ------------------- | --------------------------------- |
+| `npm run start`     | Start the Metro bundler (Expo Go) |
+| `npm run ios`       | Run dev build on iOS              |
+| `npm run android`   | Run dev build on Android          |
+| `npm run lint`      | ESLint                            |
+| `npm run typecheck` | TypeScript type check             |
+| `npm test`          | Jest unit tests                   |
 
 > **Note:** Expo Go supports most features but does not run custom native modules. See below for the development build required to test speech-to-text.
 
